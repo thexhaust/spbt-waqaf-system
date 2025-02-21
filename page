@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Waqaf Buku Sekolah</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        button { margin: 5px; padding: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginPage">
+        <h2>Selamat Datang ke Sistem Waqaf Buku Sekolah</h2>
+        <button onclick="showPage('donorPage', true)">Saya Penderma</button>
+        <button onclick="showPage('requesterPage', true)">Saya Pemohon</button>
+        <button onclick="showPage('adminPage')">Pentadbiran</button>
+    </div>
+
+    <div class="container hidden" id="donorPage">
+        <h2>Penderma - Derma Buku</h2>
+        <label>Nama:</label>
+        <input type="text" id="donorName"><br><br>
+        <div id="bookList"></div>
+        <button onclick="addBookEntry()">Tambah Buku +</button><br><br>
+        <button onclick="submitDonation()">Hantar</button>
+        <button onclick="showPage('loginPage')">Kembali</button>
+    </div>
+
+    <div class="container hidden" id="requesterPage">
+        <h2>Pemohon - Mohon Buku</h2>
+        <label>Nama:</label>
+        <input type="text" id="requesterName"><br><br>
+        <label>Kelas, Tahun:</label>
+        <input type="text" id="requesterClass"><br><br>
+        <label>Tajuk Buku:</label>
+        <select id="requestBookTitle"></select><br><br>
+        <button onclick="submitRequest()">Hantar</button>
+        <button onclick="showPage('loginPage')">Kembali</button>
+    </div>
+
+    <div class="container hidden" id="adminPage">
+        <h2>Pentadbiran - Laporan</h2>
+        <h3>Jumlah Buku Diderma: <span id="totalDonated">0</span></h3>
+        <h3>Jumlah Buku Dimohon: <span id="totalRequested">0</span></h3>
+        <h3>Senarai Buku Diderma:</h3>
+        <ul id="donatedBooks"></ul>
+        <h3>Senarai Buku Dimohon:</h3>
+        <ul id="requestedBooks"></ul>
+        <button onclick="showPage('loginPage')">Kembali</button>
+    </div>
+
+    <script>
+        let donations = {};
+        let requests = [];
+
+        function showPage(pageId, clear = false) {
+            document.querySelectorAll('.container').forEach(page => page.classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+            if (pageId === 'requesterPage') {
+                updateBookOptions();
+            } else if (pageId === 'adminPage') {
+                updateAdminPage();
+            }
+            if (clear) clearForm(pageId);
+        }
+
+        function clearForm(pageId) {
+            if (pageId === 'donorPage') {
+                document.getElementById('donorName').value = '';
+                document.getElementById('bookList').innerHTML = '';
+                addBookEntry();
+            } else if (pageId === 'requesterPage') {
+                document.getElementById('requesterName').value = '';
+                document.getElementById('requesterClass').value = '';
+            }
+        }
+        function updateAdminPage() {
+            document.getElementById('totalDonated').textContent = Object.values(donations).reduce((a, b) => a + b, 0);
+            document.getElementById('totalRequested').textContent = requests.length;
+            
+            let donatedBooksList = document.getElementById('donatedBooks');
+            donatedBooksList.innerHTML = '';
+            Object.keys(donations).forEach(title => {
+                let li = document.createElement('li');
+                li.textContent = `${title} - (${donations[title]})`;
+                donatedBooksList.appendChild(li);
+            });
+
+            let requestedBooksList = document.getElementById('requestedBooks');
+            requestedBooksList.innerHTML = '';
+            requests.forEach(request => {
+                let li = document.createElement('li');
+                li.textContent = `${request.bookTitle} - ${request.name} (${request.studentClass})`;
+                requestedBooksList.appendChild(li);
+            });
+        }
+		
+        function updateBookOptions() {
+            let bookSelect = document.getElementById('requestBookTitle');
+            bookSelect.innerHTML = '';
+            if (Object.keys(donations).length === 0) {
+                let option = document.createElement('option');
+                option.textContent = "Tiada buku tersedia";
+                option.disabled = true;
+                bookSelect.appendChild(option);
+            } else {
+                Object.keys(donations).forEach(title => {
+                    let option = document.createElement('option');
+                    option.textContent = `${title} - (${donations[title]})`;
+                    bookSelect.appendChild(option);
+                });
+            }
+        }
+
+        function addBookEntry() {
+            let bookList = document.getElementById('bookList');
+            let newEntry = document.createElement('div');
+            newEntry.classList.add('bookEntry');
+            newEntry.innerHTML = `
+                <label>Tajuk Buku:</label>
+                <select class="bookTitle">
+                    <option>Bahasa Melayu Tahun 1</option>
+                    <option>Matematik Tahun 3</option>
+                    <option>Sejarah Tahun 5</option>
+                </select><br><br>
+                <label>Kondisi Buku:</label>
+                <select class="bookCondition">
+                    <option>Baik</option>
+                    <option>Sederhana</option>
+                    <option>Rosak</option>
+                </select><br><br>
+                <button onclick="removeBookEntry(this)">Hapus</button><br><br>
+            `;
+            bookList.appendChild(newEntry);
+        }
+
+        function removeBookEntry(button) {
+            button.parentElement.remove();
+        }
+
+        function submitDonation() {
+            let bookEntries = document.querySelectorAll('.bookEntry');
+            bookEntries.forEach(entry => {
+                let title = entry.querySelector('.bookTitle').value;
+                let condition = entry.querySelector('.bookCondition').value;
+                let key = title + ' (' + condition + ')';
+                donations[key] = (donations[key] || 0) + 1;
+            });
+            alert('Terima kasih kerana menderma buku!');
+            showPage('loginPage');
+        }
+
+        function submitRequest() {
+            let name = document.getElementById('requesterName').value;
+            let studentClass = document.getElementById('requesterClass').value;
+            let bookTitle = document.getElementById('requestBookTitle').value;
+            requests.push({ name, studentClass, bookTitle });
+            alert(`Permohonan berjaya dihantar oleh ${name} (${studentClass}) untuk buku: ${bookTitle}`);
+            showPage('loginPage');
+        }
+    </script>
+</body>
+</html>
