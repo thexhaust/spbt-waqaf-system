@@ -186,10 +186,14 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+/*const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const db = firebase.firestore();
+const db = firebase.firestore();*/
 
+// Inisialisasi Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+	
 // Simpan data Penderma
 	function submitDonation() {
     let name = document.getElementById('donorName').value;
