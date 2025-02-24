@@ -168,72 +168,83 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 
 <script>
-  // Konfigurasi Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyABburbsRdm9ahFFtmpbjfHoAe621Dlsew",
-    authDomain: "spbt-waqaf.firebaseapp.com",
-    projectId: "spbt-waqaf",
-    storageBucket: "spbt-waqaf.appspot.com",
-    messagingSenderId: "582077599319",
-    appId: "1:582077599319:web:ce0f40e0628504f5c75d12",
-    measurementId: "G-NEWW3665PN"
-  };
+  // Tunggu sehingga Firebase dimuatkan sebelum digunakan
+  document.addEventListener("DOMContentLoaded", function () {
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyABburbsRdm9ahFFtmpbjfHoAe621Dlsew",
+      authDomain: "spbt-waqaf.firebaseapp.com",
+      projectId: "spbt-waqaf",
+      storageBucket: "spbt-waqaf.appspot.com",
+      messagingSenderId: "582077599319",
+      appId: "1:582077599319:web:ce0f40e0628504f5c75d12",
+      measurementId: "G-NEWW3665PN"
+    };
 
-  // Inisialisasi Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const FieldValue = firebase.firestore.FieldValue; // ✅ Tambah ini
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore(); // Simpan db dalam window supaya boleh dicapai dalam fungsi lain
 
-  console.log("Firebase Initialized Successfully");
+    console.log("Firebase Initialized Successfully");
+  });
 </script>
-
 <script>
-// Simpan data Pemohon
-function submitRequest() {
+  function submitRequest() {
     let name = document.getElementById('requesterName').value;
     let studentClass = document.getElementById('requesterClass').value;
     let bookTitle = document.getElementById('requestBookTitle').value;
 
-    db.collection("requests").add({
-        name: name,
-        studentClass: studentClass,
-        bookTitle: bookTitle,
-        timestamp: FieldValue.serverTimestamp() // ✅ Betulkan cara panggil FieldValue
-    }).then(() => {
-        alert(`Permohonan berjaya dihantar oleh ${name} (${studentClass}) untuk buku: ${bookTitle}`);
-        showPage('loginPage');
-    }).catch(error => {
-        console.error("Error menyimpan permohonan: ", error);
-    });
-}
+    if (!window.db) {
+      console.error("Database (db) belum dimuatkan. Pastikan Firebase telah inisialisasi.");
+      alert("Sistem masih dimuatkan. Sila cuba lagi sebentar.");
+      return;
+    }
 
-// Page Pentadbir
-function updateAdminPage() {
+    window.db.collection("requests").add({
+      name: name,
+      studentClass: studentClass,
+      bookTitle: bookTitle,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      alert(`Permohonan berjaya dihantar oleh ${name} (${studentClass}) untuk buku: ${bookTitle}`);
+      showPage('loginPage');
+    }).catch(error => {
+      console.error("Error menyimpan permohonan: ", error);
+    });
+  }
+
+  function updateAdminPage() {
     let donatedBooksList = document.getElementById('donatedBooks');
     let requestedBooksList = document.getElementById('requestedBooks');
+
+    if (!window.db) {
+      console.error("Database (db) belum dimuatkan.");
+      return;
+    }
 
     donatedBooksList.innerHTML = '';
     requestedBooksList.innerHTML = '';
 
-    db.collection("donations").orderBy("timestamp", "desc").get().then(snapshot => {
-        snapshot.forEach(doc => {
-            let data = doc.data();
-            let li = document.createElement('li');
-            li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
-            donatedBooksList.appendChild(li);
-        });
+    window.db.collection("donations").orderBy("timestamp", "desc").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        let data = doc.data();
+        let li = document.createElement('li');
+        li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
+        donatedBooksList.appendChild(li);
+      });
     });
 
-    db.collection("requests").orderBy("timestamp", "desc").get().then(snapshot => {
-        snapshot.forEach(doc => {
-            let data = doc.data();
-            let li = document.createElement('li');
-            li.textContent = `${data.bookTitle} - ${data.name} (${data.studentClass})`;
-            requestedBooksList.appendChild(li);
-        });
+    window.db.collection("requests").orderBy("timestamp", "desc").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        let data = doc.data();
+        let li = document.createElement('li');
+        li.textContent = `${data.bookTitle} - ${data.name} (${data.studentClass})`;
+        requestedBooksList.appendChild(li);
+      });
     });
-}
+  }
 </script>
+
 
 </body>
 </html>
