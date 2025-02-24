@@ -14,9 +14,9 @@
 <body>
     <div class="container" id="loginPage">
         <h2>Selamat Datang ke Sistem Waqaf Buku Sekolah</h2>
-        <button onclick="showPage('donorPage', true)">Saya Penderma</button>
-        <button onclick="showPage('requesterPage', true)">Saya Pemohon</button>
-        <button onclick="showPage('adminPage')">Pentadbiran</button>
+        <button onclick="showPage('donorPage', true)" disabled>Saya Penderma</button>
+        <button onclick="showPage('requesterPage', true)" disabled>Saya Pemohon</button>
+        <button onclick="showPage('adminPage')" disabled>Pentadbiran</button>
     </div>
 
     <div class="container hidden" id="donorPage">
@@ -52,7 +52,7 @@
         <button onclick="showPage('loginPage')">Kembali</button>
     </div>
 
-    <!-- ✅ Pastikan Firebase dimuatkan dahulu -->
+    <!-- ✅ Pastikan Firebase dimuat dahulu -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 
@@ -71,36 +71,18 @@
             firebase.initializeApp(firebaseConfig);
             window.db = firebase.firestore();
 
-            console.log("Firebase Initialized Successfully");
+            console.log("✅ Firebase telah dimuat sepenuhnya!");
+            document.querySelectorAll("button").forEach(btn => btn.disabled = false);
         });
-function clearForm(pageId) {
-    if (pageId === 'donorPage') {
-        document.getElementById('donorName').value = '';
-        document.getElementById('bookList').innerHTML = '';
-        addBookEntry();
-    } else if (pageId === 'requesterPage') {
-        document.getElementById('requesterName').value = '';
-        document.getElementById('requesterClass').value = '';
-    }
-}
-function updateBookOptions() {
-    if (!window.db) {
-        console.error("Database belum sedia.");
-        return;
-    }
 
-    let bookSelect = document.getElementById('requestBookTitle');
-    bookSelect.innerHTML = '';
-
-    window.db.collection("donations").get().then(snapshot => {
-        snapshot.forEach(doc => {
-            let data = doc.data();
-            let option = document.createElement('option');
-            option.textContent = `${data.title} (${data.condition})`;
-            bookSelect.appendChild(option);
-        });
-    });
-}
+        function waitForFirebase(callback) {
+            if (window.db) {
+                callback();
+            } else {
+                console.warn("⏳ Firebase belum sedia. Mencuba semula dalam 500ms...");
+                setTimeout(() => waitForFirebase(callback), 500);
+            }
+        }
 
         function showPage(pageId, clear = false) {
             document.querySelectorAll('.container').forEach(page => page.classList.add('hidden'));
@@ -113,6 +95,17 @@ function updateBookOptions() {
             }
 
             if (clear) clearForm(pageId);
+        }
+
+        function clearForm(pageId) {
+            if (pageId === 'donorPage') {
+                document.getElementById('donorName').value = '';
+                document.getElementById('bookList').innerHTML = '';
+                addBookEntry();
+            } else if (pageId === 'requesterPage') {
+                document.getElementById('requesterName').value = '';
+                document.getElementById('requesterClass').value = '';
+            }
         }
 
         function addBookEntry() {
@@ -142,50 +135,58 @@ function updateBookOptions() {
         }
 
         function submitDonation() {
-    if (!window.db) {
-        console.error("Database belum sedia. Sila tunggu sebentar dan cuba lagi.");
-        alert("Sistem masih dimuatkan. Sila cuba sebentar lagi.");
-        return;
-    }
+            waitForFirebase(() => {
+                let name = document.getElementById('donorName').value;
+                let bookEntries = document.querySelectorAll('.bookEntry');
 
-    let name = document.getElementById('donorName').value;
-    let bookEntries = document.querySelectorAll('.bookEntry');
+                bookEntries.forEach(entry => {
+                    let title = entry.querySelector('.bookTitle').value;
+                    let condition = entry.querySelector('.bookCondition').value;
 
-    bookEntries.forEach(entry => {
-        let title = entry.querySelector('.bookTitle').value;
-        let condition = entry.querySelector('.bookCondition').value;
+                    window.db.collection("donations").add({
+                        name,
+                        title,
+                        condition,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        alert("✅ Derma berjaya dihantar!");
+                        showPage('loginPage');
+                    }).catch(error => console.error("❌ Error:", error));
+                });
+            });
+        }
 
-        window.db.collection("donations").add({
-            name,
-            title,
-            condition,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-            alert("Derma berjaya dihantar.");
-            showPage('loginPage');
-        }).catch(error => console.error("Error:", error));
-    });
-}
+        function updateAdminPage() {
+            waitForFirebase(() => {
+                let donatedBooksList = document.getElementById('donatedBooks');
+                donatedBooksList.innerHTML = '';
 
-function updateAdminPage() {
-    if (!window.db) {
-        console.error("Database belum sedia. Sila tunggu sebentar.");
-        return;
-    }
+                window.db.collection("donations").get().then(snapshot => {
+                    snapshot.forEach(doc => {
+                        let data = doc.data();
+                        let li = document.createElement('li');
+                        li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
+                        donatedBooksList.appendChild(li);
+                    });
+                });
+            });
+        }
 
-    let donatedBooksList = document.getElementById('donatedBooks');
-    donatedBooksList.innerHTML = '';
+        function updateBookOptions() {
+            waitForFirebase(() => {
+                let bookSelect = document.getElementById('requestBookTitle');
+                bookSelect.innerHTML = '';
 
-    window.db.collection("donations").get().then(snapshot => {
-        snapshot.forEach(doc => {
-            let data = doc.data();
-            let li = document.createElement('li');
-            li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
-            donatedBooksList.appendChild(li);
-        });
-    });
-}
-
+                window.db.collection("donations").get().then(snapshot => {
+                    snapshot.forEach(doc => {
+                        let data = doc.data();
+                        let option = document.createElement('option');
+                        option.textContent = `${data.title} (${data.condition})`;
+                        bookSelect.appendChild(option);
+                    });
+                });
+            });
+        }
     </script>
 </body>
 </html>
