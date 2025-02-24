@@ -14,9 +14,9 @@
 <body>
     <div class="container" id="loginPage">
         <h2>Selamat Datang ke Sistem Waqaf Buku Sekolah</h2>
-        <button onclick="showPage('donorPage', true)" disabled>Saya Penderma</button>
-        <button onclick="showPage('requesterPage', true)" disabled>Saya Pemohon</button>
-        <button onclick="showPage('adminPage')" disabled>Pentadbiran</button>
+        <button onclick="showPage('donorPage', true)" disabled id="donorBtn">Saya Penderma</button>
+        <button onclick="showPage('requesterPage', true)" disabled id="requesterBtn">Saya Pemohon</button>
+        <button onclick="showPage('adminPage')" disabled id="adminBtn">Pentadbiran</button>
     </div>
 
     <div class="container hidden" id="donorPage">
@@ -52,9 +52,9 @@
         <button onclick="showPage('loginPage')">Kembali</button>
     </div>
 
-    <!-- ✅ Pastikan Firebase dimuat dahulu -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <!-- ✅ Gunakan Firebase v8.x.x untuk mengelakkan masalah `import/export` -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -72,120 +72,14 @@
             window.db = firebase.firestore();
 
             console.log("✅ Firebase telah dimuat sepenuhnya!");
-            document.querySelectorAll("button").forEach(btn => btn.disabled = false);
+            document.getElementById("donorBtn").disabled = false;
+            document.getElementById("requesterBtn").disabled = false;
+            document.getElementById("adminBtn").disabled = false;
         });
-
-        function waitForFirebase(callback) {
-            if (window.db) {
-                callback();
-            } else {
-                console.warn("⏳ Firebase belum sedia. Mencuba semula dalam 500ms...");
-                setTimeout(() => waitForFirebase(callback), 500);
-            }
-        }
 
         function showPage(pageId, clear = false) {
             document.querySelectorAll('.container').forEach(page => page.classList.add('hidden'));
             document.getElementById(pageId).classList.remove('hidden');
-
-            if (pageId === 'requesterPage') {
-                updateBookOptions();
-            } else if (pageId === 'adminPage') {
-                updateAdminPage();
-            }
-
-            if (clear) clearForm(pageId);
-        }
-
-        function clearForm(pageId) {
-            if (pageId === 'donorPage') {
-                document.getElementById('donorName').value = '';
-                document.getElementById('bookList').innerHTML = '';
-                addBookEntry();
-            } else if (pageId === 'requesterPage') {
-                document.getElementById('requesterName').value = '';
-                document.getElementById('requesterClass').value = '';
-            }
-        }
-
-        function addBookEntry() {
-            let bookList = document.getElementById('bookList');
-            let newEntry = document.createElement('div');
-            newEntry.classList.add('bookEntry');
-            newEntry.innerHTML = `
-                <label>Tajuk Buku:</label>
-                <select class="bookTitle">
-                    <option>Bahasa Melayu Tahun 1</option>
-                    <option>Matematik Tahun 3</option>
-                    <option>Sejarah Tahun 5</option>
-                </select><br><br>
-                <label>Kondisi Buku:</label>
-                <select class="bookCondition">
-                    <option>Baik</option>
-                    <option>Sederhana</option>
-                    <option>Rosak</option>
-                </select><br><br>
-                <button onclick="removeBookEntry(this)">Hapus</button><br><br>
-            `;
-            bookList.appendChild(newEntry);
-        }
-
-        function removeBookEntry(button) {
-            button.parentElement.remove();
-        }
-
-        function submitDonation() {
-            waitForFirebase(() => {
-                let name = document.getElementById('donorName').value;
-                let bookEntries = document.querySelectorAll('.bookEntry');
-
-                bookEntries.forEach(entry => {
-                    let title = entry.querySelector('.bookTitle').value;
-                    let condition = entry.querySelector('.bookCondition').value;
-
-                    window.db.collection("donations").add({
-                        name,
-                        title,
-                        condition,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        alert("✅ Derma berjaya dihantar!");
-                        showPage('loginPage');
-                    }).catch(error => console.error("❌ Error:", error));
-                });
-            });
-        }
-
-        function updateAdminPage() {
-            waitForFirebase(() => {
-                let donatedBooksList = document.getElementById('donatedBooks');
-                donatedBooksList.innerHTML = '';
-
-                window.db.collection("donations").get().then(snapshot => {
-                    snapshot.forEach(doc => {
-                        let data = doc.data();
-                        let li = document.createElement('li');
-                        li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
-                        donatedBooksList.appendChild(li);
-                    });
-                });
-            });
-        }
-
-        function updateBookOptions() {
-            waitForFirebase(() => {
-                let bookSelect = document.getElementById('requestBookTitle');
-                bookSelect.innerHTML = '';
-
-                window.db.collection("donations").get().then(snapshot => {
-                    snapshot.forEach(doc => {
-                        let data = doc.data();
-                        let option = document.createElement('option');
-                        option.textContent = `${data.title} (${data.condition})`;
-                        bookSelect.appendChild(option);
-                    });
-                });
-            });
         }
     </script>
 </body>
