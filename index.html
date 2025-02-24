@@ -188,6 +188,76 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+const db = firebase.firestore();
+
+// Simpan data Penderma
+	function submitDonation() {
+    let name = document.getElementById('donorName').value;
+    let bookEntries = document.querySelectorAll('.bookEntry');
+
+    bookEntries.forEach(entry => {
+        let title = entry.querySelector('.bookTitle').value;
+        let condition = entry.querySelector('.bookCondition').value;
+
+        db.collection("donations").add({
+            name: name,
+            title: title,
+            condition: condition,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            alert("Derma berjaya direkod!");
+            showPage('loginPage');
+        }).catch(error => {
+            console.error("Error menambah data: ", error);
+        });
+    });
+}
+
+// Simpan data Pemohon
+	function submitRequest() {
+    let name = document.getElementById('requesterName').value;
+    let studentClass = document.getElementById('requesterClass').value;
+    let bookTitle = document.getElementById('requestBookTitle').value;
+
+    db.collection("requests").add({
+        name: name,
+        studentClass: studentClass,
+        bookTitle: bookTitle,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        alert(`Permohonan berjaya dihantar oleh ${name} (${studentClass}) untuk buku: ${bookTitle}`);
+        showPage('loginPage');
+    }).catch(error => {
+        console.error("Error menyimpan permohonan: ", error);
+    });
+}
+
+// Page Pentadbir
+	function updateAdminPage() {
+    let donatedBooksList = document.getElementById('donatedBooks');
+    let requestedBooksList = document.getElementById('requestedBooks');
+
+    donatedBooksList.innerHTML = '';
+    requestedBooksList.innerHTML = '';
+
+    db.collection("donations").orderBy("timestamp", "desc").get().then(snapshot => {
+        snapshot.forEach(doc => {
+            let data = doc.data();
+            let li = document.createElement('li');
+            li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
+            donatedBooksList.appendChild(li);
+        });
+    });
+
+    db.collection("requests").orderBy("timestamp", "desc").get().then(snapshot => {
+        snapshot.forEach(doc => {
+            let data = doc.data();
+            let li = document.createElement('li');
+            li.textContent = `${data.bookTitle} - ${data.name} (${data.studentClass})`;
+            requestedBooksList.appendChild(li);
+        });
+    });
+}
 
 </script>
 
