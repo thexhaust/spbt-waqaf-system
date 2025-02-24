@@ -182,12 +182,14 @@
   // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const FieldValue = firebase.firestore.FieldValue; // ✅ Tambah ini
 
   console.log("Firebase Initialized Successfully");
 </script>
+
 <script>
 // Simpan data Pemohon
-	function submitRequest() {
+function submitRequest() {
     let name = document.getElementById('requesterName').value;
     let studentClass = document.getElementById('requesterClass').value;
     let bookTitle = document.getElementById('requestBookTitle').value;
@@ -196,7 +198,7 @@
         name: name,
         studentClass: studentClass,
         bookTitle: bookTitle,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        timestamp: FieldValue.serverTimestamp() // ✅ Betulkan cara panggil FieldValue
     }).then(() => {
         alert(`Permohonan berjaya dihantar oleh ${name} (${studentClass}) untuk buku: ${bookTitle}`);
         showPage('loginPage');
@@ -206,7 +208,7 @@
 }
 
 // Page Pentadbir
-	function updateAdminPage() {
+function updateAdminPage() {
     let donatedBooksList = document.getElementById('donatedBooks');
     let requestedBooksList = document.getElementById('requestedBooks');
 
@@ -231,7 +233,6 @@
         });
     });
 }
-
 </script>
 
 </body>
