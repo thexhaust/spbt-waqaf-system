@@ -73,6 +73,34 @@
 
             console.log("Firebase Initialized Successfully");
         });
+function clearForm(pageId) {
+    if (pageId === 'donorPage') {
+        document.getElementById('donorName').value = '';
+        document.getElementById('bookList').innerHTML = '';
+        addBookEntry();
+    } else if (pageId === 'requesterPage') {
+        document.getElementById('requesterName').value = '';
+        document.getElementById('requesterClass').value = '';
+    }
+}
+function updateBookOptions() {
+    if (!window.db) {
+        console.error("Database belum sedia.");
+        return;
+    }
+
+    let bookSelect = document.getElementById('requestBookTitle');
+    bookSelect.innerHTML = '';
+
+    window.db.collection("donations").get().then(snapshot => {
+        snapshot.forEach(doc => {
+            let data = doc.data();
+            let option = document.createElement('option');
+            option.textContent = `${data.title} (${data.condition})`;
+            bookSelect.appendChild(option);
+        });
+    });
+}
 
         function showPage(pageId, clear = false) {
             document.querySelectorAll('.container').forEach(page => page.classList.add('hidden'));
@@ -114,69 +142,50 @@
         }
 
         function submitDonation() {
-            if (!window.db) {
-                console.error("Database belum sedia.");
-                return;
-            }
+    if (!window.db) {
+        console.error("Database belum sedia. Sila tunggu sebentar dan cuba lagi.");
+        alert("Sistem masih dimuatkan. Sila cuba sebentar lagi.");
+        return;
+    }
 
-            let name = document.getElementById('donorName').value;
-            let bookEntries = document.querySelectorAll('.bookEntry');
+    let name = document.getElementById('donorName').value;
+    let bookEntries = document.querySelectorAll('.bookEntry');
 
-            bookEntries.forEach(entry => {
-                let title = entry.querySelector('.bookTitle').value;
-                let condition = entry.querySelector('.bookCondition').value;
+    bookEntries.forEach(entry => {
+        let title = entry.querySelector('.bookTitle').value;
+        let condition = entry.querySelector('.bookCondition').value;
 
-                window.db.collection("donations").add({
-                    name,
-                    title,
-                    condition,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    alert("Derma berjaya dihantar.");
-                    showPage('loginPage');
-                }).catch(error => console.error("Error:", error));
-            });
-        }
+        window.db.collection("donations").add({
+            name,
+            title,
+            condition,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            alert("Derma berjaya dihantar.");
+            showPage('loginPage');
+        }).catch(error => console.error("Error:", error));
+    });
+}
 
-        function submitRequest() {
-            if (!window.db) {
-                console.error("Database belum sedia.");
-                return;
-            }
+function updateAdminPage() {
+    if (!window.db) {
+        console.error("Database belum sedia. Sila tunggu sebentar.");
+        return;
+    }
 
-            let name = document.getElementById('requesterName').value;
-            let studentClass = document.getElementById('requesterClass').value;
-            let bookTitle = document.getElementById('requestBookTitle').value;
+    let donatedBooksList = document.getElementById('donatedBooks');
+    donatedBooksList.innerHTML = '';
 
-            window.db.collection("requests").add({
-                name,
-                studentClass,
-                bookTitle,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                alert("Permohonan berjaya dihantar.");
-                showPage('loginPage');
-            }).catch(error => console.error("Error:", error));
-        }
+    window.db.collection("donations").get().then(snapshot => {
+        snapshot.forEach(doc => {
+            let data = doc.data();
+            let li = document.createElement('li');
+            li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
+            donatedBooksList.appendChild(li);
+        });
+    });
+}
 
-        function updateAdminPage() {
-            if (!window.db) {
-                console.error("Database belum sedia.");
-                return;
-            }
-
-            let donatedBooksList = document.getElementById('donatedBooks');
-            donatedBooksList.innerHTML = '';
-
-            window.db.collection("donations").get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    let data = doc.data();
-                    let li = document.createElement('li');
-                    li.textContent = `${data.title} (${data.condition}) - ${data.name}`;
-                    donatedBooksList.appendChild(li);
-                });
-            });
-        }
     </script>
 </body>
 </html>
