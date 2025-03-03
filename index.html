@@ -4,82 +4,136 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Waqaf Buku Sekolah</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .container { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-        button { margin: 5px; padding: 10px; }
-        .hidden { display: none; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
 </head>
-<body>
-    <div class="container" id="loginPage">
-        <h2>Selamat Datang ke Sistem Waqaf Buku Sekolah</h2>
-        <button onclick="showPage('donorPage', true)" disabled id="donorBtn">Saya Penderma</button>
-        <button onclick="showPage('requesterPage', true)" disabled id="requesterBtn">Saya Pemohon</button>
-        <button onclick="showPage('adminPage')" disabled id="adminBtn">Pentadbiran</button>
+<body class="bg-gray-100 text-gray-900">
+    <div id="homePage" class="container mx-auto p-6">
+        <h2 class="text-2xl font-bold text-center">Selamat Datang ke Sistem Waqaf Buku Sekolah</h2>
+        <div class="flex justify-center space-x-4 mt-6">
+            <button onclick="showPage('donorPage')" class="bg-blue-500 text-white px-4 py-2 rounded">Saya Penderma</button>
+            <button onclick="showPage('requesterPage')" class="bg-green-500 text-white px-4 py-2 rounded">Saya Pemohon</button>
+            <button onclick="showPage('adminPage')" class="bg-gray-700 text-white px-4 py-2 rounded">Pentadbiran</button>
+        </div>
     </div>
 
-    <div class="container hidden" id="donorPage">
-        <h2>Penderma - Derma Buku</h2>
-        <label>Nama:</label>
-        <input type="text" id="donorName"><br><br>
+    <div id="donorPage" class="hidden container mx-auto p-6">
+        <h2 class="text-xl font-semibold">Penderma - Derma Buku</h2>
+        <input type="text" id="donorName" placeholder="Nama" class="block p-2 border rounded w-full mt-2">
+        <input type="email" id="donorEmail" placeholder="Email" class="block p-2 border rounded w-full mt-2">
         <div id="bookList"></div>
-        <button onclick="addBookEntry()">Tambah Buku +</button><br><br>
-        <button onclick="submitDonation()">Hantar</button>
-        <button onclick="showPage('loginPage')">Kembali</button>
+        <button onclick="addBookEntry()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2">Tambah Buku +</button>
+        <button onclick="submitDonation()" class="bg-green-500 text-white px-4 py-2 rounded mt-2">Hantar</button>
+        <button onclick="showPage('homePage')" class="bg-red-500 text-white px-4 py-2 rounded mt-2">Kembali</button>
     </div>
 
-    <div class="container hidden" id="requesterPage">
-        <h2>Pemohon - Mohon Buku</h2>
-        <label>Nama:</label>
-        <input type="text" id="requesterName"><br><br>
-        <label>Kelas, Tahun:</label>
-        <input type="text" id="requesterClass"><br><br>
-        <label>Tajuk Buku:</label>
-        <select id="requestBookTitle"></select><br><br>
-        <button onclick="submitRequest()">Hantar</button>
-        <button onclick="showPage('loginPage')">Kembali</button>
+    <div id="requesterPage" class="hidden container mx-auto p-6">
+        <h2 class="text-xl font-semibold">Pemohon - Mohon Buku</h2>
+        <input type="text" id="requesterName" placeholder="Nama" class="block p-2 border rounded w-full mt-2">
+        <input type="text" id="requesterClass" placeholder="Kelas / Tahun" class="block p-2 border rounded w-full mt-2">
+        <div id="requestBookList"></div>
+        <button onclick="addRequestEntry()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2">Tambah Buku +</button>
+        <button onclick="submitRequest()" class="bg-green-500 text-white px-4 py-2 rounded mt-2">Hantar</button>
+        <button onclick="showPage('homePage')" class="bg-red-500 text-white px-4 py-2 rounded mt-2">Kembali</button>
     </div>
 
-    <div class="container hidden" id="adminPage">
-        <h2>Pentadbiran - Laporan</h2>
+    <div id="adminPage" class="hidden container mx-auto p-6">
+        <h2 class="text-xl font-semibold">Pentadbiran - Laporan</h2>
         <h3>Jumlah Buku Diderma: <span id="totalDonated">0</span></h3>
         <h3>Jumlah Buku Dimohon: <span id="totalRequested">0</span></h3>
         <h3>Senarai Buku Diderma:</h3>
         <ul id="donatedBooks"></ul>
         <h3>Senarai Buku Dimohon:</h3>
         <ul id="requestedBooks"></ul>
-        <button onclick="showPage('loginPage')">Kembali</button>
+        <button onclick="showPage('homePage')" class="bg-red-500 text-white px-4 py-2 rounded mt-2">Kembali</button>
     </div>
 
-    <!-- ✅ Gunakan Firebase v8.x.x untuk mengelakkan masalah `import/export` -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const firebaseConfig = {
-                apiKey: "AIzaSyABburbsRdm9ahFFtmpbjfHoAe621Dlsew",
-                authDomain: "spbt-waqaf.firebaseapp.com",
-                projectId: "spbt-waqaf",
-                storageBucket: "spbt-waqaf.appspot.com",
-                messagingSenderId: "582077599319",
-                appId: "1:582077599319:web:ce0f40e0628504f5c75d12",
-                measurementId: "G-NEWW3665PN"
-            };
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyABburbsRdm9ahFFtmpbjfHoAe621Dlsew",
+    authDomain: "spbt-waqaf.firebaseapp.com",
+    projectId: "spbt-waqaf",
+    storageBucket: "spbt-waqaf.firebasestorage.app",
+    messagingSenderId: "582077599319",
+    appId: "1:582077599319:web:ce0f40e0628504f5c75d12",
+    measurementId: "G-NEWW3665PN"
+  };
 
-            firebase.initializeApp(firebaseConfig);
-            window.db = firebase.firestore();
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 
-            console.log("✅ Firebase telah dimuat sepenuhnya!");
-            document.getElementById("donorBtn").disabled = false;
-            document.getElementById("requesterBtn").disabled = false;
-            document.getElementById("adminBtn").disabled = false;
-        });
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        function showPage(pageId, clear = false) {
-            document.querySelectorAll('.container').forEach(page => page.classList.add('hidden'));
+        let donatedBooks = [];
+
+        function showPage(pageId) {
+            document.querySelectorAll('div.container').forEach(div => div.classList.add('hidden'));
             document.getElementById(pageId).classList.remove('hidden');
+            if (pageId === 'requesterPage') {
+                updateRequestBookList();
+            }
+        }
+
+        function addBookEntry() {
+            let bookList = document.getElementById('bookList');
+            let newEntry = document.createElement('div');
+            newEntry.classList.add('book-entry', 'mt-2');
+            newEntry.innerHTML = `
+                <select class="bookTitle block p-2 border rounded w-full mt-2">
+                    <option>Bahasa Melayu Tahun 1</option>
+                    <option>Matematik Tahun 3</option>
+                    <option>Sejarah Tahun 5</option>
+                </select>
+                <select class="bookCondition block p-2 border rounded w-full mt-2">
+                    <option>Baik</option>
+                    <option>Sederhana</option>
+                    <option>Rosak</option>
+                </select>
+                <button onclick="removeBookEntry(this)" class="bg-red-500 text-white px-4 py-2 rounded mt-2">Hapus</button>
+            `;
+            bookList.appendChild(newEntry);
+        }
+
+        function removeBookEntry(button) {
+            button.parentElement.remove();
+        }
+
+        function submitDonation() {
+            let bookEntries = document.querySelectorAll('.book-entry');
+            bookEntries.forEach(entry => {
+                let title = entry.querySelector('.bookTitle').value;
+                let condition = entry.querySelector('.bookCondition').value;
+                donatedBooks.push(`${title} (${condition})`);
+            });
+            alert("Derma telah dihantar!");
+            showPage('homePage');
+        }
+
+        function updateRequestBookList() {
+            let requestBookList = document.getElementById('requestBookList');
+            requestBookList.innerHTML = '';
+            donatedBooks.forEach(book => {
+                let div = document.createElement('div');
+                div.textContent = book;
+                requestBookList.appendChild(div);
+            });
+        }
+
+        function submitRequest() {
+            alert("Permohonan telah dihantar!");
+            showPage('homePage');
         }
     </script>
 </body>
