@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Waqaf Buku Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script> -->
     <link rel="icon" href="data:,">
-
 </head>
 <body class="bg-gray-100 text-gray-900">
     <div id="homePage" class="container mx-auto p-6">
@@ -52,94 +49,26 @@
     </div>
 
 <script type="module">
-  // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyABburbsRdm9ahFFtmpbjfHoAe621Dlsew",
     authDomain: "spbt-waqaf.firebaseapp.com",
     projectId: "spbt-waqaf",
-    storageBucket: "spbt-waqaf.firebasestorage.app",
+    storageBucket: "spbt-waqaf.appspot.com",
     messagingSenderId: "582077599319",
     appId: "1:582077599319:web:ce0f40e0628504f5c75d12",
     measurementId: "G-NEWW3665PN"
   };
-function showPage(pageId) {
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  function showPage(pageId) {
     document.querySelectorAll('div.container').forEach(div => div.classList.add('hidden'));
     document.getElementById(pageId).classList.remove('hidden');
-}
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(default);
-
-        let donatedBooks = [];
-
-        function showPage(pageId) {
-            document.querySelectorAll('div.container').forEach(div => div.classList.add('hidden'));
-            document.getElementById(pageId).classList.remove('hidden');
-            if (pageId === 'requesterPage') {
-                updateRequestBookList();
-            }
-        }
-
-        function addBookEntry() {
-            let bookList = document.getElementById('bookList');
-            let newEntry = document.createElement('div');
-            newEntry.classList.add('book-entry', 'mt-2');
-            newEntry.innerHTML = `
-                <select class="bookTitle block p-2 border rounded w-full mt-2">
-                    <option>Bahasa Melayu Tahun 1</option>
-                    <option>Matematik Tahun 3</option>
-                    <option>Sejarah Tahun 5</option>
-                </select>
-                <select class="bookCondition block p-2 border rounded w-full mt-2">
-                    <option>Baik</option>
-                    <option>Sederhana</option>
-                    <option>Rosak</option>
-                </select>
-                <button onclick="removeBookEntry(this)" class="bg-red-500 text-white px-4 py-2 rounded mt-2">Hapus</button>
-            `;
-            bookList.appendChild(newEntry);
-        }
-
-        function removeBookEntry(button) {
-            button.parentElement.remove();
-        }
-
-        function submitDonation() {
-            let bookEntries = document.querySelectorAll('.book-entry');
-            bookEntries.forEach(entry => {
-                let title = entry.querySelector('.bookTitle').value;
-                let condition = entry.querySelector('.bookCondition').value;
-                donatedBooks.push(`${title} (${condition})`);
-            });
-            alert("Derma telah dihantar!");
-            showPage('homePage');
-        }
-
-        function updateRequestBookList() {
-            let requestBookList = document.getElementById('requestBookList');
-            requestBookList.innerHTML = '';
-            donatedBooks.forEach(book => {
-                let div = document.createElement('div');
-                div.textContent = book;
-                requestBookList.appendChild(div);
-            });
-        }
-
-        function submitRequest() {
-            alert("Permohonan telah dihantar!");
-            showPage('homePage');
-        }
-    </script>
+  }
+</script>
 </body>
 </html>
