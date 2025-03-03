@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Waqaf Buku Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script> -->
+    <link rel="icon" href="data:,">
 
 </head>
 <body class="bg-gray-100 text-gray-900">
@@ -68,6 +69,10 @@
     appId: "1:582077599319:web:ce0f40e0628504f5c75d12",
     measurementId: "G-NEWW3665PN"
   };
+function showPage(pageId) {
+    document.querySelectorAll('div.container').forEach(div => div.classList.add('hidden'));
+    document.getElementById(pageId).classList.remove('hidden');
+}
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
